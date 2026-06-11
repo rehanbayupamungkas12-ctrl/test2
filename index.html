@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV. SALMAN DESIGN - Jasa Desain Indonesia</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 Library -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0d121d; color: #f8fafc; overflow-x: hidden; }
+        .gradient-text { background: linear-gradient(90deg, #22d3ee, #2196F3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card-dark { background-color: #1a2230; border: 1px solid #2d3748; }
+        .marquee-container { display: flex; overflow: hidden; mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent); }
+        .marquee-content { display: flex; gap: 1rem; animation: marquee 25s linear infinite; padding: 1rem 0; }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .testimonial-card { min-width: 280px; background-color: #1a2230; border: 1px solid #2d3748; padding: 1.25rem; border-radius: 1rem; }
+        .dashboard-marquee-container { display: flex; overflow: hidden; white-space: nowrap; width: 100%; }
+        .dashboard-marquee-text { display: inline-block; padding-left: 100%; animation: dashboardMarquee 20s linear infinite; }
+        @keyframes dashboardMarquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hidden { display: none; }
+        .form-input { width: 100%; background: #2d3748; border: 1px solid #3d4a60; border-radius: 0.75rem; padding: 0.85rem; color: white; margin-top: 0.25rem; }
+        .btn-cyan { background-color: #22d3ee; color: #0d121d; font-weight: bold; width: 100%; padding: 0.85rem; border-radius: 0.75rem; transition: all 0.3s; }
+        .btn-cyan:hover { background-color: #06b6d4; transform: translateY(-2px); }
+        .hero-circle { width: 100px; height: 100px; background-color: #22d3ee; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 0 30px rgba(34, 211, 238, 0.3); }
+        .hero-circle i { font-size: 50px; color: #0d121d; }
+        .swal2-title { font-size: 1.25rem !important; font-weight: 700 !important; }
+        .swal2-popup { font-size: 0.85rem !important; border-radius: 1.25rem !important; }
+        @keyframes hourglass-flip { 0%, 75% { transform: rotate(0deg); } 85%, 100% { transform: rotate(180deg); } }
+        .animate-hourglass { display: inline-block; animation: hourglass-flip 2.5s infinite ease-in-out; }
+    </style>
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="landing-nav" class="flex items-center justify-between px-6 py-4 bg-[#0d121d] border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+            <div class="text-lg md:text-xl font-bold gradient-text cursor-pointer" onclick="showPage('landing')">CV. SALMAN DESIGN</div>
+        </div>
+    </nav>
+
+    <!-- PAGE: LANDING -->
+    <div id="page-landing">
+        <header class="pt-16 pb-20 px-4 md:py-28 text-center max-w-7xl mx-auto">
+            <div class="hero-circle transform hover:scale-105 transition-transform duration-300">
+                <i class="fa-solid fa-face-smile"></i>
+            </div>
+            <p class="text-slate-400 text-xs md:text-sm mb-3 tracking-widest uppercase font-semibold">CV. SALMAN DESIGN</p>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight w-full max-w-4xl mx-auto px-2">
+                Jasa Design <span class="text-cyan-400">Profesional</span> dan <span class="text-blue-400">Kreatif</span> di Indonesia.
+            </h1>
+            <p class="text-slate-500 text-xs sm:text-sm md:text-base max-w-2xl mx-auto mb-10 leading-relaxed px-4">
+                CV. SALMAN DESIGN hadir sebagai solusi jasa design Indonesia yang menyediakan layanan kreatif, profesional, cepat, dan berkualitas untuk kebutuhan bisnis maupun personal Anda.
+            </p>
+            <div class="flex flex-row justify-center gap-4 max-w-xs sm:max-w-sm mx-auto px-2">
+                <button onclick="showPage('login')" class="flex-1 bg-cyan-400 text-slate-900 font-extrabold py-3.5 rounded-full flex items-center justify-center gap-2 text-sm shadow-lg shadow-cyan-500/20 transition-all hover:bg-cyan-300 hover:scale-[1.03]">
+                    <i class="fa-solid fa-right-to-bracket"></i> Masuk
+                </button>
+                <button onclick="showPage('register')" class="flex-1 bg-slate-700 text-white font-extrabold py-3.5 rounded-full flex items-center justify-center gap-2 text-sm transition-all hover:bg-slate-600 hover:scale-[1.03]">
+                    <i class="fa-solid fa-user-plus"></i> Daftar
+                </button>
+            </div>
+        </header>
+
+        <section class="px-6 max-w-7xl mx-auto mb-20">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-md md:max-w-none mx-auto">
+                <div class="card-dark rounded-2xl p-8 text-center shadow-lg transition-transform duration-300 hover:-translate-y-1">
+                    <div class="text-3xl font-extrabold text-cyan-400 mb-1 counter" data-target="25000">0</div>
+                    <div class="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">Client Puas</div>
+                </div>
+                <div class="card-dark rounded-2xl p-8 text-center shadow-lg transition-transform duration-300 hover:-translate-y-1">
+                    <div class="text-3xl font-extrabold text-cyan-400 mb-1 counter" data-target="50000">0</div>
+                    <div class="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">Project Selesai</div>
+                </div>
+                <div class="card-dark rounded-2xl p-8 text-center shadow-lg transition-transform duration-300 hover:-translate-y-1">
+                    <div class="text-3xl font-extrabold text-cyan-400 mb-1 counter" data-target="2500">0</div>
+                    <div class="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">Layanan Tersedia</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-10 px-6 max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-2xl font-bold mb-2">Fitur CV. SALMAN DESIGN</h2>
+                <p class="text-slate-500 text-xs sm:text-sm">Fitur modern yang akan membuat Anda lebih mudah.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-md md:max-w-none mx-auto">
+                <div class="card-dark p-8 md:p-10 rounded-2xl text-center shadow-lg hover:shadow-cyan-500/5 transition-all">
+                    <h3 class="font-extrabold text-lg mb-3">Design Profesional</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Dikerjakan dengan team profesional and hasil dijamin bagus sesuai kebutuhan client.</p>
+                </div>
+                <div class="card-dark p-8 md:p-10 rounded-2xl text-center shadow-lg hover:shadow-cyan-500/5 transition-all">
+                    <h3 class="font-extrabold text-lg mb-3">Fast Response</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Kami siap membantu Anda jika Anda mengalami kesulitan atau tidak mengerti terkait layanan yang kami sediakan.</p>
+                </div>
+                <div class="card-dark p-8 md:p-10 rounded-2xl text-center shadow-lg hover:shadow-cyan-500/5 transition-all">
+                    <h3 class="font-extrabold text-lg mb-3">Hasil Berkualitas</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed">Cocok untuk promosi bisnis, sekolah, UMKM, gaming, dan lain-lain.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-[#22d3ee] py-16 px-6 mt-16">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-2xl font-bold text-white mb-2">Cara Order di CV. SALMAN DESIGN</h2>
+                    <p class="text-white/80 text-xs sm:text-sm italic font-medium">4 Langkah mudah untuk memulai bisnis anda.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-md md:max-w-none mx-auto">
+                    <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl border border-white/20 text-white shadow-md">
+                        <h3 class="font-bold mb-1">1. Hubungi Admin</h3>
+                        <p class="text-xs opacity-90">Konsultasikan kebutuhan design Anda dengan admin kami</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl border border-white/20 text-white shadow-md">
+                        <h3 class="font-bold mb-1">2. Kirim Detail Design</h3>
+                        <p class="text-xs opacity-90">Kirim ukuran, konsep, warna, and referensi design.</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl border border-white/20 text-white shadow-md">
+                        <h3 class="font-bold mb-1">3. Proses Design</h3>
+                        <p class="text-xs opacity-90">Team kami mulai mengerjakan design sesuai request Anda.</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl border border-white/20 text-white shadow-md">
+                        <h3 class="font-bold mb-1">4. File Dikirim</h3>
+                        <p class="text-xs opacity-90">Hasil design dikirim dalam kualitas HD siap upload atau cetak.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 px-6 max-w-7xl mx-auto">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-bold mb-4 leading-tight">
+                    Client kami <span class="text-cyan-400">Menyukai</span> CV. SALMAN DESIGN, Sekarang Giliran Anda 😍
+                </h2>
+                <p class="text-slate-500 text-xs sm:text-sm leading-relaxed max-w-xs sm:max-w-md mx-auto">
+                    Kami bangga dengan pengembangan Layanan kami, yang secara konsisten diberi ulasan positif.
+                </p>
+            </div>
+            <div class="marquee-container">
+                <div id="marquee-box" class="marquee-content"></div>
+            </div>
+        </section>
+
+        <footer class="py-16 px-6 text-center bg-[#0d121d] border-t border-slate-800">
+            <div class="text-slate-500 text-xs sm:text-sm font-medium">
+                All rights reserved © 2020 <span class="gradient-text font-bold">CV. SALMAN DESIGN</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- PAGE: LOGIN -->
+    <div id="page-login" class="hidden min-h-screen flex items-center justify-center p-6 bg-[#F8FAFC]">
+        <div class="w-full max-w-md bg-white border border-slate-200 p-8 sm:p-10 rounded-3xl shadow-xl">
+            <div class="mb-6 text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Sign In</h2>
+                <p class="text-slate-400 text-xs font-semibold">Silakan masuk ke dalam sistem</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-slate-500 text-[11px] font-bold uppercase ml-1">Username atau Email</label>
+                    <input type="text" id="login-user" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all" placeholder="Username atau Alamat Email" required>
+                </div>
+                <div class="relative space-y-1">
+                    <label class="text-slate-500 text-[11px] font-bold uppercase ml-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="login-pass" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all pr-12" placeholder="Password" required>
+                        <button type="button" onclick="togglePasswordVisibility('login-pass', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                            <i class="fa-solid fa-eye-slash text-base"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5 pt-1">
+                    <input type="checkbox" id="remember-me" class="w-4 h-4 rounded border-slate-300 accent-[#2196F3] cursor-pointer">
+                    <label for="remember-me" class="text-slate-500 text-xs sm:text-sm font-medium cursor-pointer select-none">Ingat saya</label>
+                </div>
+                <button type="submit" class="w-full bg-[#2196F3] hover:bg-blue-600 text-white font-extrabold py-3.5 rounded-xl transition-all shadow-md shadow-blue-500/20 text-sm uppercase tracking-wide">MASUK</button>
+            </form>
+            <p id="register-redirect-text" class="text-center text-xs sm:text-sm text-slate-500 mt-6 font-medium">
+                Belum punya akun? <button onclick="showPage('register')" class="text-[#2196F3] hover:underline font-semibold ml-1">Daftar Sekarang</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- PAGE: REGISTER -->
+    <div id="page-register" class="hidden min-h-screen py-10 px-6 flex items-center justify-center bg-[#F8FAFC]">
+        <div class="w-full max-w-md bg-white border border-slate-200 p-8 sm:p-10 rounded-3xl shadow-xl">
+            <div class="mb-8">
+                <h2 class="text-2xl sm:text-3xl font-bold text-[#475569]">Register</h2>
+            </div>
+            <form onsubmit="handleRegister(event)" class="space-y-6">
+                <div class="space-y-1">
+                    <input type="text" id="reg-name" class="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all" placeholder="Nama Lengkap" required>
+                </div>
+                <div class="space-y-1.5">
+                    <input type="email" id="reg-email" class="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all" placeholder="Email" required>
+                </div>
+                <div class="space-y-1.5">
+                    <input type="text" id="reg-wa" class="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all" placeholder="Nomor WhatsApp (Contoh: 081234567)" required>
+                </div>
+                <div class="space-y-1.5 relative">
+                    <input type="password" id="reg-pass" class="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all pr-12" placeholder="Password" required>
+                    <button type="button" onclick="togglePasswordVisibility('reg-pass', this)" class="absolute right-4 top-[24px] -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <i class="fa-solid fa-eye-slash text-base"></i>
+                    </button>
+                    <p class="text-[11px] text-slate-400 font-medium px-1 leading-normal">Gunakan 8 karakter atau lebih</p>
+                </div>
+                <div class="space-y-1.5 relative">
+                    <input type="password" id="reg-confirm-pass" class="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all pr-12" placeholder="Konfirmasi Password" required>
+                    <button type="button" onclick="togglePasswordVisibility('reg-confirm-pass', this)" class="absolute right-4 top-[24px] -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <i class="fa-solid fa-eye-slash text-base"></i>
+                    </button>
+                </div>
+                <button type="submit" class="w-full bg-[#2196F3] hover:bg-blue-600 text-white font-extrabold py-3.5 rounded-xl transition-all shadow-md shadow-blue-500/20 text-sm uppercase tracking-wide">Register Akun</button>
+            </form>
+            <p class="text-center text-xs sm:text-sm text-slate-500 mt-8 font-medium">
+                Anda sudah punya akun? <button onclick="showPage('login')" class="text-[#2196F3] hover:underline font-semibold ml-1">Log in</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- PAGE: DASHBOARD HOME USER -->
+    <div id="page-home" class="hidden min-h-screen bg-slate-100 text-slate-800 flex flex-col md:flex-row relative">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl z-40 transform -translate-x-full transition-transform duration-300 md:translate-x-0 md:static md:h-screen flex flex-col justify-between">
+            <div class="p-6 relative">
+                <button onclick="toggleSidebar('sidebar')" class="md:hidden absolute top-5 right-5 text-slate-400 hover:text-slate-800 focus:outline-none transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3 mb-8">
+                    <img src="https://files.catbox.moe/d964gp.jpeg" class="w-8 h-8 rounded-lg object-cover" alt="Logo">
+                    <span class="font-extrabold text-slate-800 text-sm tracking-wide">CV. SALMAN DESIGN</span>
+                </div>
+                <nav class="space-y-2">
+                    <button onclick="switchTab('tab-affiliate')" class="tab-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-semibold bg-[#2196F3] text-white transition-all shadow-md shadow-blue-500/20" id="btn-tab-affiliate">
+                        <i class="fa-solid fa-house text-sm"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('tab-products')" class="tab-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all" id="btn-tab-products">
+                        <i class="fa-solid fa-box text-sm"></i> Produk
+                    </button>
+                    <button onclick="switchTab('tab-orders')" class="tab-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all" id="btn-tab-orders">
+                        <i class="fa-solid fa-cart-shopping text-sm"></i> Order
+                    </button>
+                    <button onclick="switchT
