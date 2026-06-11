@@ -505,125 +505,354 @@
             }
             switchTab('tab-checkout');
         }
-               // ==================== PAKASIR PAYMENT GATEWAY (QRIS ONLY) ====================
-        const PAKASIR_CONFIG = { apiKey: 'KRVkvNtfRvn93E7yaB95hVDMIdTya7Jm', slug: 'payment-pembayaran', baseUrl: 'https://app.pakasir.com/api/v1' };
-        let currentOrderData = null;
-        let paymentTimer = null;
 
-        async function createPakasirTransaction(orderData) {
-            try {
-                const payload = {
-                    slug: PAKASIR_CONFIG.slug,
-                    reference_id: orderData.id.replace('#', ''),
-                    amount: parseInt(orderData.amount),
-                    customer_name: orderData.customerName,
-                    customer_email: orderData.customerEmail,
-                    customer_phone: orderData.customerPhone,
-                    payment_method: 'qris',
-                    item_details: [{ name: orderData.productName, price: parseInt(orderData.amount), quantity: 1 }],
-                    callback_url: window.location.href,
-                    return_url: window.location.href
-                };
-                const response = await fetch(`${PAKASIR_CONFIG.baseUrl}/transaction/create`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Api-Key': PAKASIR_CONFIG.apiKey },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if(result.status === 'success' || result.data) {
-                    const data = result.data || result;
-                    return { success: true, transactionId: data.reference_id || data.id, qrCode: data.qr_code || data.payment_url, isSimulated: false };
+    // ==================== PAKASIR PAYMENT GATEWAY (REAL QRIS) ====================
+    const PAKASIR_CONFIG = { 
+        apiKey: 'sdnRGhA4Mi7HuvbVKYqKL3p9aCAgxYG2',  // API REAL Anda
+        slug: 'payment-pembayaran', 
+        baseUrl: 'https://app.pakasir.com/api/v1' 
+    };
+    
+    let currentOrderData = null;
+    let paymentTimer = null;
+
+    // Fungsi membuat transaksi REAL ke PakaSIR (TANPA SIMULASI)
+    async function createPakasirTransaction(orderData) {
+        try {
+            const payload = {
+                slug: PAKASIR_CONFIG.slug,
+                reference_id: orderData.id.replace('#', '') + '-' + Date.now(),
+                amount: parseInt(orderData.amount),
+                customer_name: orderData.customerName,
+                customer_email: orderData.customerEmail,
+                customer_phone: orderData.customerPhone,
+                payment_method: 'qris',
+                item_details: [{ 
+                    name: orderData.productName, 
+                    price: parseInt(orderData.amount), 
+                    quantity: 1 
+                }],
+                callback_url: window.location.href,
+                return_url: window.location.href
+            };
+            
+            console.log('🚀 Mengirim ke PakaSIR:', payload);
+            
+            const response = await fetch(`${PAKASIR_CONFIG.baseUrl}/transaction/create`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-Api-Key': PAKASIR_CONFIG.apiKey 
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            console.log('📡 Response PakaSIR:', result);
+            
+            // Cek apakah transaksi berhasil dibuat
+            if(result.status === 'success' || result.data) {
+                const data = result.data || result;
+                
+                // Pastikan QR Code ada
+                let qrCodeUrl = data.qr_code || data.payment_url;
+                if(!qrCodeUrl) {
+                    throw new Error('QR Code tidak ditemukan dalam response');
                 }
-                throw new Error('Gagal');
-            } catch(e) {
-                return { success: true, transactionId: 'SIM-' + orderData.id, qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=SIM-${orderData.id}`, isSimulated: true };
+                
+                return { 
+                    success: true, 
+                    transactionId: data.reference_id || data.id, 
+                    qrCode: qrCodeUrl,
+                    paymentUrl: data.payment_url,
+                    isSimulated: false 
+                };
+            } else {
+                // Tampilkan error dari API
+                throw new Error(result.message || 'Gagal membuat transaksi');
             }
+        } catch(e) {
+            console.error('❌ Error PakaSIR:', e);
+            
+            // TAMPILKAN ERROR KE USER - TIDAK PAKAI SIMULASI!
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Memproses Pembayaran',
+                html: `Terjadi kesalahan: <br><strong>${e.message}</strong><br><br>Silakan coba lagi atau hubungi admin.`,
+                confirmButtonColor: '#2196F3'
+            });
+            
+            return { success: false, error: e.message };
         }
+    }
 
-        async function checkPaymentStatus(transactionId, isSimulated) {
-            if(isSimulated) { await new Promise(r => setTimeout(r, 3000)); return { success: true, status: 'PAID' }; }
-            try {
-                const res = await fetch(`${PAKASIR_CONFIG.baseUrl}/transaction/status?reference_id=${transactionId}`, { headers: { 'X-Api-Key': PAKASIR_CONFIG.apiKey } });
-                const result = await res.json();
-                const status = result.data?.status || result.status;
-                return { success: true, status: (status === 'paid' || status === 'success') ? 'PAID' : 'PENDING' };
-            } catch(e) { return { success: false, status: 'PENDING' }; }
+    // Cek status pembayaran REAL
+    async function checkPaymentStatus(transactionId) {
+        try {
+            const response = await fetch(`${PAKASIR_CONFIG.baseUrl}/transaction/status?reference_id=${transactionId}`, { 
+                headers: { 'X-Api-Key': PAKASIR_CONFIG.apiKey } 
+            });
+            const result = await response.json();
+            console.log('Status transaksi:', result);
+            
+            const status = result.data?.status || result.status;
+            // status bisa: 'paid', 'success', 'pending', 'unpaid'
+            const isPaid = (status === 'paid' || status === 'success');
+            
+            return { success: true, status: isPaid ? 'PAID' : 'PENDING', rawStatus: status };
+        } catch(e) {
+            console.error('Error cek status:', e);
+            return { success: false, status: 'PENDING' };
         }
+    }
 
-        function showPaymentModal(paymentData) {
-            const existing = document.getElementById('payment-modal');
-            if(existing) existing.remove();
-            const modalHTML = `<div id="payment-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[200] p-4"><div class="bg-white rounded-3xl max-w-md w-full p-6"><div class="text-center"><div class="bg-white p-4 rounded-2xl shadow-lg border-2 border-green-200 inline-block"><img id="qr-img" src="${paymentData.qrCode}" class="w-48 h-48 object-contain" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ERROR'"></div><div class="mt-4 text-center"><p class="font-bold text-slate-800">Total: ${formatRupiah(currentOrderData.amount)}</p><p class="text-xs text-slate-500 mt-1">Scan QR Code untuk membayar</p></div><div id="payment-status-area" class="mt-4"><div class="bg-amber-50 p-3 rounded-xl"><p class="text-amber-700 text-sm">⏳ Menunggu pembayaran...</p></div></div><div class="flex gap-3 mt-5"><button id="check-status-btn" class="flex-1 bg-[#2196F3] text-white py-3 rounded-xl font-bold">Cek Status</button><button onclick="closePaymentModal()" class="flex-1 bg-slate-100 py-3 rounded-xl font-bold">Tutup</button></div></div></div></div>`;
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            document.getElementById('check-status-btn').onclick = () => checkAndUpdate(paymentData.transactionId, paymentData.isSimulated);
+    // Tampilkan modal pembayaran
+    function showPaymentModal(paymentData) {
+        const existing = document.getElementById('payment-modal');
+        if(existing) existing.remove();
+        
+        const modalHTML = `
+            <div id="payment-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-[200] p-4" style="z-index: 1000;">
+                <div class="bg-white rounded-3xl max-w-md w-full p-6">
+                    <div class="text-center">
+                        <div class="bg-white p-4 rounded-2xl shadow-lg border-2 border-green-200 inline-block">
+                            ${paymentData.qrCode ? 
+                                `<img id="qr-img" src="${paymentData.qrCode}" class="w-48 h-48 object-contain" 
+                                      onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ERROR'">` : 
+                                `<div class="w-48 h-48 flex items-center justify-center bg-slate-100 rounded-xl">
+                                     <p class="text-xs text-slate-500">Memuat QR Code...</p>
+                                 </div>`
+                            }
+                        </div>
+                        
+                        <div class="mt-4">
+                            <p class="font-bold text-slate-800 text-lg">${formatRupiah(currentOrderData.amount)}</p>
+                            <p class="text-xs text-slate-500 mt-1">Scan QR Code menggunakan aplikasi mobile banking atau E-Wallet</p>
+                        </div>
+                        
+                        <div id="payment-status-area" class="mt-4">
+                            <div class="bg-amber-50 p-3 rounded-xl">
+                                <i class="fa-solid fa-hourglass-half text-amber-500"></i>
+                                <p class="text-amber-700 text-sm mt-1">⏳ Menunggu pembayaran...</p>
+                                <p class="text-xs text-amber-600 mt-1">Silakan scan QR Code dan lakukan pembayaran</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3 mt-5">
+                            <button id="check-status-btn" class="flex-1 bg-[#2196F3] hover:bg-blue-600 text-white py-3 rounded-xl font-bold transition">
+                                <i class="fa-solid fa-rotate-right"></i> Cek Status
+                            </button>
+                            <button onclick="closePaymentModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl font-bold transition">
+                                Tutup
+                            </button>
+                        </div>
+                        
+                        <p class="text-[10px] text-slate-400 mt-4">
+                            <i class="fa-regular fa-clock"></i> QR Code berlaku 24 jam
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Pasang event listener untuk cek status
+        const checkBtn = document.getElementById('check-status-btn');
+        if(checkBtn) {
+            checkBtn.onclick = () => checkAndUpdateStatus(paymentData.transactionId);
+        }
+        
+        // Auto cek setiap 5 detik
+        if(paymentTimer) clearInterval(paymentTimer);
+        paymentTimer = setInterval(() => {
+            checkAndUpdateStatus(paymentData.transactionId, true);
+        }, 5000);
+    }
+
+    // Cek status dan update tampilan
+    async function checkAndUpdateStatus(transactionId, isAuto = false) {
+        const btn = document.getElementById('check-status-btn');
+        const statusArea = document.getElementById('payment-status-area');
+        
+        if(btn && !isAuto) { 
+            btn.disabled = true; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengecek...'; 
+        }
+        
+        const result = await checkPaymentStatus(transactionId);
+        
+        if(result.status === 'PAID') {
+            // Pembayaran berhasil!
             if(paymentTimer) clearInterval(paymentTimer);
-            paymentTimer = setInterval(() => checkAndUpdate(paymentData.transactionId, paymentData.isSimulated, true), 5000);
-        }
-
-        async function checkAndUpdate(transactionId, isSimulated, isAuto=false) {
-            const btn = document.getElementById('check-status-btn');
-            if(btn && !isAuto) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengecek...'; }
-            const result = await checkPaymentStatus(transactionId, isSimulated);
-            if(result.status === 'PAID') {
-                if(paymentTimer) clearInterval(paymentTimer);
-                document.getElementById('payment-status-area').innerHTML = `<div class="bg-green-100 p-3 rounded-xl"><i class="fa-regular fa-circle-check text-green-500 text-2xl"></i><p class="font-bold text-green-700 mt-1">✅ Pembayaran Berhasil!</p></div>`;
-                updateOrderStatus(currentOrderData.id, 'Selesai');
-                Swal.fire({ icon: 'success', title: 'Pembayaran Berhasil!', timer: 1500, showConfirmButton: false });
-                setTimeout(() => { closePaymentModal(); switchTab('tab-orders'); renderOrdersTable(); }, 1500);
+            
+            if(statusArea) {
+                statusArea.innerHTML = `
+                    <div class="bg-green-100 p-3 rounded-xl">
+                        <i class="fa-regular fa-circle-check text-green-500 text-2xl"></i>
+                        <p class="font-bold text-green-700 mt-1">✅ Pembayaran Berhasil!</p>
+                        <p class="text-xs text-green-600 mt-1">Terima kasih, pesanan Anda akan segera diproses</p>
+                    </div>
+                `;
             }
-            if(btn && !isAuto) { btn.disabled = false; btn.innerHTML = 'Cek Status'; }
+            
+            // Update status order di localStorage
+            updateOrderStatus(currentOrderData.id, 'Selesai');
+            
+            // Notifikasi WhatsApp ke admin
+            sendPaymentNotification(currentOrderData);
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Pembayaran Berhasil! ✅',
+                text: 'Terima kasih telah melakukan pembayaran. Pesanan Anda sedang diproses.',
+                confirmButtonColor: '#2196F3',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            setTimeout(() => {
+                closePaymentModal();
+                if(typeof switchTab === 'function') switchTab('tab-orders');
+                if(typeof renderOrdersTable === 'function') renderOrdersTable();
+            }, 2000);
+        } else if(!isAuto && result.status !== 'PAID') {
+            // Manual check tapi belum bayar
+            Swal.fire({
+                icon: 'info',
+                title: 'Menunggu Pembayaran',
+                text: 'Silakan scan QR Code dan selesaikan pembayaran Anda terlebih dahulu.',
+                confirmButtonColor: '#2196F3'
+            });
         }
-
-        function updateOrderStatus(orderId, newStatus) {
-            const orders = getOrders();
-            const idx = orders.findIndex(o => o.id === orderId);
-            if(idx !== -1) { orders[idx].status = newStatus; localStorage.setItem('salman_orders', JSON.stringify(orders)); }
+        
+        if(btn && !isAuto) { 
+            btn.disabled = false; 
+            btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Cek Status'; 
         }
+    }
 
-        async function handleCheckoutWithPayment(e) {
-            e.preventDefault();
-            const prodName = document.getElementById('checkout-product-name').innerText;
-            const fullname = document.getElementById('order-fullname').value;
-            const email = document.getElementById('order-email').value;
-            const phone = document.getElementById('order-phone').value;
-            const payment = document.getElementById('order-payment').value;
-            const priceText = document.getElementById('checkout-product-price').innerText;
-            const amount = parseInt(priceText.replace(/[^0-9]/g, '')) || 0;
-            if(!fullname || !email || !phone || !payment) { Swal.fire({ icon: 'warning', title: 'Data Tidak Lengkap' }); return; }
-            if(payment !== 'QRIS') { Swal.fire({ icon: 'info', title: 'Hanya QRIS' }); return; }
-            const orderId = '#ORD-' + Math.floor(10000 + Math.random() * 90000);
-            const today = new Date();
-            const formattedDate = today.toLocaleDateString('id-ID');
-            currentOrderData = { id: orderId, productName: prodName, amount: amount, customerName: fullname, customerEmail: email, customerPhone: phone };
-            const newOrder = { id: orderId, productName: prodName, price: priceText, date: formattedDate, userEmail: email, userName: fullname, userPhone: phone, paymentMethod: 'QRIS', status: 'Pending' };
-            saveOrder(newOrder);
-            Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-            const result = await createPakasirTransaction({ id: orderId, productName: prodName, amount: amount.toString(), customerName: fullname, customerEmail: email, customerPhone: phone });
-            Swal.close();
-            if(result.success) { showPaymentModal(result); renderOrdersTable(); }
-            else { Swal.fire({ icon: 'error', title: 'Gagal', text: 'Coba lagi' }); }
+    // Update status order di localStorage
+    function updateOrderStatus(orderId, newStatus) {
+        const orders = JSON.parse(localStorage.getItem('salman_orders') || '[]');
+        const idx = orders.findIndex(o => o.id === orderId);
+        if(idx !== -1) { 
+            orders[idx].status = newStatus; 
+            localStorage.setItem('salman_orders', JSON.stringify(orders)); 
         }
+    }
 
-        window.handleCheckout = handleCheckoutWithPayment;
-        function closePaymentModal() { const modal = document.getElementById('payment-modal'); if(modal) modal.remove(); if(paymentTimer) clearInterval(paymentTimer); }
-        function formatRupiah(amount) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount); }
-            // ==================== FUNGSI LAIN ====================
-        function togglePasswordVisibility(fieldId, btn) { const f = document.getElementById(fieldId); const i = btn.querySelector('i'); if(f.type === 'password') { f.type = 'text'; i.className = 'fa-solid fa-eye'; } else { f.type = 'password'; i.className = 'fa-solid fa-eye-slash'; } }
-        function copyAffiliateLink() { const t = document.getElementById('affiliate-link-text').innerText; navigator.clipboard.writeText(t); Swal.fire({ title: 'Berhasil!', text: 'Link disalin', icon: 'success', timer: 1500 }); }
-        function toggleProfileDropdown(e) { e.stopPropagation(); document.getElementById('profile-dropdown-user').classList.toggle('hidden'); }
-        window.addEventListener('click', () => { const d = document.getElementById('profile-dropdown-user'); if(d && !d.classList.contains('hidden')) d.classList.add('hidden'); });
-        function openMyProfileModal() { document.getElementById('profile-modal-name').innerText = loggedInUser.name; document.getElementById('profile-modal-email').innerText = loggedInUser.email; document.getElementById('profile-modal-wa').innerText = loggedInUser.wa || '-'; document.getElementById('modal-my-profile').classList.remove('hidden'); }
-        function closeMyProfileModal() { document.getElementById('modal-my-profile').classList.add('hidden'); }
-        function showPage(pageId) { ['landing','login','register','home'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+pageId).classList.remove('hidden'); document.getElementById('landing-nav').classList.toggle('hidden', pageId === 'home'); if(pageId === 'landing') animateCounters(); }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-        function switchTab(tabId) { document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden')); document.getElementById(tabId).classList.remove('hidden'); document.querySelectorAll('.tab-btn').forEach(b => b.className = 'tab-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 transition-all'); const active = document.getElementById('btn-'+tabId); if(active) active.className = 'tab-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-semibold bg-[#2196F3] text-white shadow-md'; if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('-translate-x-full'); }
-        function handleRegister(e) { e.preventDefault(); const email = document.getElementById('reg-email').value; const name = document.getElementById('reg-name').value; const wa = document.getElementById('reg-wa').value; const pass = document.getElementById('reg-pass').value; const confirm = document.getElementById('reg-confirm-pass').value; if(pass !== confirm) return Swal.fire({ icon: 'error', title: 'Password tidak cocok' }); const username = email.split('@')[0]; const users = getUsers(); if(users.some(u => u.email === email)) return Swal.fire({ icon: 'error', title: 'Email sudah terdaftar' }); const newUser = { email, wa, name, username, password: pass }; saveUser(newUser); loggedInUser = newUser; document.getElementById('dashboard-user').innerText = name; document.getElementById('dropdown-full-name').innerText = name; document.getElementById('dropdown-email').innerText = email; Swal.fire({ title: 'Berhasil!', text: 'Akun berhasil dibuat', icon: 'success' }).then(() => { renderOrdersTable(); showPage('home'); switchTab('tab-affiliate'); }); }
-        function handleLogin(e) { e.preventDefault(); const input = document.getElementById('login-user').value; const pass = document.getElementById('login-pass').value; const users = getUsers(); const user = users.find(u => (u.username === input || u.email === input) && u.password === pass); if(user) { loggedInUser = user; document.getElementById('dashboard-user').innerText = user.name; document.getElementById('dropdown-full-name').innerText = user.name; document.getElementById('dropdown-email').innerText = user.email; Swal.fire({ title: 'Login Berhasil!', icon: 'success', timer: 1500, showConfirmButton: false }).then(() => { renderOrdersTable(); showPage('home'); switchTab('tab-affiliate'); }); } else { Swal.fire({ icon: 'error', title: 'Gagal', text: 'Username/email atau password salah' }); } }
-        function logout() { Swal.fire({ title: 'Keluar?', text: 'Apakah Anda yakin?', icon: 'warning', showCancelButton: true }).then(res => { if(res.isConfirmed) { loggedInUser = null; showPage('landing'); } }); }
-        function animateCounters() { document.querySelectorAll('.counter').forEach(c => { const target = +c.getAttribute('data-target'); let count = 0; const update = () => { const inc = target/40; if(count < target) { count += inc; c.innerText = Math.floor(count).toLocaleString('id-ID'); requestAnimationFrame(() => setTimeout(update, 20)); } else { c.innerText = target.toLocaleString('id-ID'); } }; update(); }); }
-        const testimonials = [{ name: "Budi", text: "Hasil desain sangat profesional" }, { name: "Siti", text: "Pelayanan ramah dan responsif" }, { name: "Dewi", text: "Sangat puas dengan hasilnya" }, { name: "Fajar", text: "Tim profesional, hasil luar biasa" }];
-        function initTestimonials() { const box = document.getElementById('marquee-box'); if(box) { const html = testimonials.map(t => `<div class="testimonial-card"><p class="text-slate-400 text-[10px] mb-4 italic">"${t.text}"</p><span class="text-[10px] font-bold text-slate-300">${t.name}</span></div>`).join(''); box.innerHTML = html + html; } }
-        window.onload = () => { renderCategoryButtons(); renderProducts(productsList); initTestimonials(); animateCounters(); };
-        function renderProducts(products) { const container = document.getElementById('products-grid-container'); if(container) { container.innerHTML = products.map(p => `<div class="bg-white rounded-2xl border border-slate-200 p-5 text-center"><h4 class="text-sm font-extrabold text-slate-800">${p.name}</h4><div class="h-px bg-slate-100 my-2"></div><span class="block text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md font-bold">Harga: Rp ${parseInt(p.price).toLocaleString('id-ID')}</span><button onclick="openOrderForm('${p.name}', 'Rp ${parseInt(p.price).toLocaleString('id-ID')}')" class="w-full bg-[#2196F3] text-white font-bold text-xs py-2.5 rounded-xl mt-4 hover:bg-blue-600">Beli</button></div>`).join(''); } }
-    </script>
+    // Kirim notifikasi WhatsApp
+    function sendPaymentNotification(order) {
+        const adminWA = "6289513480484";
+        const message = `✅ *PEMBAYARAN BERHASIL* ✅\n\n` +
+                        `*ID Order:* ${order.id}\n` +
+                        `*Produk:* ${order.productName}\n` +
+                        `*Harga:* ${order.price}\n` +
+                        `*Status:* LUNAS\n\n` +
+                        `*Data Pelanggan:*\n` +
+                        `Nama: ${order.userName}\n` +
+                        `Email: ${order.userEmail}\n` +
+                        `WA: ${order.userPhone}\n` +
+                        `Metode: QRIS\n\n` +
+                        `_Pesanan siap diproses._`;
+        
+        window.open(`https://api.whatsapp.com/send?phone=${adminWA}&text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    // Handle checkout utama
+    async function handleCheckoutWithPayment(e) {
+        e.preventDefault();
+        
+        const prodName = document.getElementById('checkout-product-name').innerText;
+        const fullname = document.getElementById('order-fullname').value;
+        const email = document.getElementById('order-email').value;
+        const phone = document.getElementById('order-phone').value;
+        const payment = document.getElementById('order-payment').value;
+        const priceText = document.getElementById('checkout-product-price').innerText;
+        const amount = parseInt(priceText.replace(/[^0-9]/g, '')) || 0;
+        
+        if(!fullname || !email || !phone || !payment) { 
+            Swal.fire({ icon: 'warning', title: 'Data Tidak Lengkap', text: 'Isi semua kolom!' }); 
+            return; 
+        }
+        
+        if(payment !== 'QRIS') { 
+            Swal.fire({ icon: 'info', title: 'Hanya QRIS', text: 'Pembayaran hanya menerima QRIS.' }); 
+            return; 
+        }
+        
+        const orderId = '#ORD-' + Math.floor(10000 + Math.random() * 90000);
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString('id-ID');
+        
+        currentOrderData = { 
+            id: orderId, 
+            productName: prodName, 
+            amount: amount,
+            price: priceText,
+            customerName: fullname, 
+            customerEmail: email, 
+            customerPhone: phone,
+            userName: fullname,
+            userEmail: email,
+            userPhone: phone
+        };
+        
+        // Simpan order ke localStorage
+        const newOrder = { 
+            id: orderId, 
+            productName: prodName, 
+            price: priceText, 
+            date: formattedDate, 
+            userEmail: email, 
+            userName: fullname, 
+            userPhone: phone, 
+            paymentMethod: 'QRIS', 
+            status: 'Pending' 
+        };
+        saveOrder(newOrder);
+        
+        // Tampilkan loading
+        Swal.fire({ 
+            title: 'Memproses Pembayaran...', 
+            text: 'Mohon tunggu sebentar', 
+            allowOutsideClick: false, 
+            didOpen: () => Swal.showLoading() 
+        });
+        
+        // Buat transaksi ke PakaSIR
+        const result = await createPakasirTransaction({ 
+            id: orderId, 
+            productName: prodName, 
+            amount: amount.toString(), 
+            customerName: fullname, 
+            customerEmail: email, 
+            customerPhone: phone 
+        });
+        
+        Swal.close();
+        
+        if(result.success) { 
+            showPaymentModal(result); 
+            if(typeof renderOrdersTable === 'function') renderOrdersTable(); 
+        }
+    }
+
+    // Ganti fungsi handleCheckout
+    window.handleCheckout = handleCheckoutWithPayment;
+    
+    function closePaymentModal() { 
+        const modal = document.getElementById('payment-modal'); 
+        if(modal) modal.remove(); 
+        if(paymentTimer) clearInterval(paymentTimer); 
+    }
+    
+    function formatRupiah(amount) { 
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount); 
+    }
+    
+    console.log('✅ PakaSIR Payment Gateway REAL - SIAP!');
+</script
 </body>
 </html>
